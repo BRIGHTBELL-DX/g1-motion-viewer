@@ -37,7 +37,7 @@ export class Viewer3D {
     this._renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this._renderer.shadowMap.enabled = true;
     this._renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
-    this._renderer.setClearColor(0x111418, 1);
+    this._renderer.setClearColor(0x1e2530, 1);  // 약간 밝은 네이비 — 흰 로봇 대비↑
   }
 
   // ── 씬 ───────────────────────────────────────────────────────
@@ -57,10 +57,10 @@ export class Viewer3D {
 
   // ── 조명 ─────────────────────────────────────────────────────
   _setupLights() {
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambient = new THREE.AmbientLight(0xffffff, 1.0);  // 전체 밝기↑
     this._scene.add(ambient);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);  // 메인 조명↑
     dirLight.position.set(4, 8, 4);
     dirLight.castShadow = true;
     dirLight.shadow.camera.near = 0.5;
@@ -70,9 +70,13 @@ export class Viewer3D {
     dirLight.shadow.mapSize.set(1024, 1024);
     this._scene.add(dirLight);
 
-    const fill = new THREE.DirectionalLight(0x8899cc, 0.4);
+    const fill = new THREE.DirectionalLight(0xaabbdd, 0.8);  // 보조 조명↑
     fill.position.set(-3, 3, -2);
     this._scene.add(fill);
+
+    const back = new THREE.DirectionalLight(0xffffff, 0.5);  // 후방 조명 추가
+    back.position.set(0, 4, -5);
+    this._scene.add(back);
   }
 
   // ── 바닥 그리드 ───────────────────────────────────────────────

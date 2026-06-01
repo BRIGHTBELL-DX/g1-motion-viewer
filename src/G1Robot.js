@@ -18,14 +18,14 @@ import { G1_DIMS } from './joints.js';
 
 const D = G1_DIMS;
 
-// 색상 팔레트
+// 색상 팔레트 — 흰색/밝은 회색 계열 (어두운 배경 대비)
 const COL = {
-  torso:    0x3a4a5c,
-  pelvis:   0x2e3d4f,
-  limb:     0x2a3a4a,
-  joint:    0x4a9eff,
-  head:     0x3a4a5c,
-  foot:     0x1e2a36,
+  torso:    0xf0f0f0,   // 밝은 흰색
+  pelvis:   0xd8d8d8,   // 연회색
+  limb:     0xe8e8e8,   // 흰색에 가까운 회색
+  joint:    0x4a9eff,   // 파란 관절 마커 유지
+  head:     0xf5f5f5,   // 거의 흰색
+  foot:     0xc0c0c0,   // 중간 회색
 };
 
 function capsule(r, h, color) {
