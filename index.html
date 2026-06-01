@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>G1 Motion Viewer</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- ── 상단 헤더 ── -->
+  <header id="header">
+    <span class="logo">G1 Motion Viewer</span>
+    <span class="subtitle">Unitree G1 · VDSuit Full CSV Playback</span>
+    <div class="header-right">
+      <span id="fps-counter">-- FPS</span>
+      <span id="frame-counter">Frame: 0 / 0</span>
+    </div>
+  </header>
+
+  <!-- ── 메인 레이아웃 ── -->
+  <div id="layout">
+
+    <!-- 좌측 패널: 파일 업로드 + 재생 컨트롤 -->
+    <aside id="left-panel">
+      <section class="panel-section">
+        <h3>파일 로드</h3>
+        <div id="drop-zone">
+          <div class="drop-icon">📂</div>
+          <p>CSV 파일을 드래그하거나<br/>버튼으로 선택하세요</p>
+          <input type="file" id="csv-input" accept=".csv" />
+          <button id="load-btn">CSV 선택</button>
+        </div>
+        <div id="file-info" class="hidden">
+          <p id="file-name"></p>
+          <p id="file-stats"></p>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h3>재생 컨트롤</h3>
+        <div id="playback-controls">
+          <div class="control-row">
+            <button id="rewind-btn" title="처음으로">⏮</button>
+            <button id="play-btn" title="재생/일시정지">▶</button>
+            <button id="loop-btn" title="반복" class="active">🔁</button>
+          </div>
+          <div class="speed-row">
+            <label>속도</label>
+            <input type="range" id="speed-slider" min="0.1" max="3.0" step="0.1" value="1.0" />
+            <span id="speed-value">1.0×</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h3>뷰 설정</h3>
+        <div class="toggle-row">
+          <label><input type="checkbox" id="show-grid" checked /> 바닥 그리드</label>
+          <label><input type="checkbox" id="show-axes" /> 좌표축</label>
+          <label><input type="checkbox" id="show-trajectory" checked /> 루트 궤적</label>
+          <label><input type="checkbox" id="show-labels" /> 관절 레이블</label>
+        </div>
+        <button id="reset-camera-btn">카메라 초기화</button>
+      </section>
+
+      <section class="panel-section">
+        <h3>관절 범위 설정</h3>
+        <p class="hint">CSV 컬럼 → G1 관절 매핑</p>
+        <button id="mapping-btn">매핑 편집</button>
+      </section>
+    </aside>
+
+    <!-- 중앙: 3D 뷰포트 -->
+    <main id="viewport-container">
+      <canvas id="viewport"></canvas>
+      <!-- 타임라인 -->
+      <div id="timeline-bar">
+        <span id="time-current">0.00s</span>
+        <input type="range" id="timeline-slider" min="0" max="100" value="0" step="1" />
+        <span id="time-total">0.00s</span>
+      </div>
+      <!-- 로딩 오버레이 -->
+      <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p>파일 로딩 중...</p>
+      </div>
+      <!-- 빈 상태 힌트 -->
+      <div id="empty-hint">
+        <div class="empty-icon">🤖</div>
+        <h2>G1 Motion Viewer</h2>
+        <p>VDRobot Studio에서 출력된<br/><strong>36컬럼 CSV 파일</strong>을 불러오세요</p>
+        <p class="hint">컬럼 형식: [0-2] root pos · [3-6] quaternion · [7-35] 29 joints</p>
+      </div>
+    </main>
+
+    <!-- 우측 패널: 관절 각도 -->
+    <aside id="right-panel">
+      <section class="panel-section">
+        <h3>관절 각도 <span class="unit">(rad)</span></h3>
+        <div id="joint-panel"></div>
+      </section>
+    </aside>
+
+  </div>
+
+  <!-- 관절 매핑 모달 -->
+  <div id="mapping-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>관절 매핑 편집</h2>
+      <p>CSV 컬럼 7~35이 G1의 어떤 관절에 해당하는지 확인하세요.<br/>VDRobot Studio CSV (lafan 36col) 기준 기본값이 설정되어 있습니다.</p>
+      <div id="mapping-table-container"></div>
+      <div class="modal-footer">
+        <button id="mapping-reset">기본값 복원</button>
+        <button id="mapping-apply">적용</button>
+        <button id="mapping-close">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
