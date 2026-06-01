@@ -52,14 +52,32 @@
       </section>
 
       <section class="panel-section">
-        <h3>뷰 설정</h3>
+        <h3>뷰 모드</h3>
+        <div class="view-mode-row">
+          <button class="view-btn active" data-mode="2" title="솔리드 + 스켈레톤">둘다</button>
+          <button class="view-btn"        data-mode="0" title="솔리드 메시만">솔리드</button>
+          <button class="view-btn"        data-mode="1" title="스켈레톤 라인만">스켈레톤</button>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h3>카메라</h3>
+        <div class="cam-row">
+          <button class="cam-btn" data-preset="perspective">3D</button>
+          <button class="cam-btn" data-preset="front">정면</button>
+          <button class="cam-btn" data-preset="side">측면</button>
+          <button class="cam-btn" data-preset="top">위</button>
+        </div>
+        <button id="reset-camera-btn">초기화</button>
+      </section>
+
+      <section class="panel-section">
+        <h3>뷰 옵션</h3>
         <div class="toggle-row">
           <label><input type="checkbox" id="show-grid" checked /> 바닥 그리드</label>
           <label><input type="checkbox" id="show-axes" /> 좌표축</label>
           <label><input type="checkbox" id="show-trajectory" checked /> 루트 궤적</label>
-          <label><input type="checkbox" id="show-labels" /> 관절 레이블</label>
         </div>
-        <button id="reset-camera-btn">카메라 초기화</button>
       </section>
 
       <section class="panel-section">

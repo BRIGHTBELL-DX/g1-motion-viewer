@@ -246,6 +246,27 @@ input[type=range]::-webkit-slider-thumb {
 }
 .modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
 
+/* ── 뷰 모드 버튼 ── */
+.view-mode-row { display: flex; gap: 4px; }
+.view-btn {
+  flex: 1; padding: 6px 4px; font-size: 11px;
+  border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text-dim);
+  border-radius: 4px; cursor: pointer; transition: all 0.15s;
+}
+.view-btn:hover   { border-color: var(--accent); color: var(--text); }
+.view-btn.active  { background: rgba(74,158,255,0.18); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+/* ── 카메라 프리셋 ── */
+.cam-row { display: flex; gap: 4px; margin-bottom: 6px; }
+.cam-btn {
+  flex: 1; padding: 5px 4px; font-size: 11px;
+  border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text-dim);
+  border-radius: 4px; cursor: pointer; transition: all 0.15s;
+}
+.cam-btn:hover { border-color: var(--accent); color: var(--text); }
+
 /* ── 유틸 ── */
 .hidden { display: none !important; }
-#reset-camera-btn, #mapping-btn { width: 100%; margin-top: 6px; }
+#reset-camera-btn, #mapping-btn { width: 100%; margin-top: 2px; }

@@ -3,12 +3,12 @@
  * CSVPlayer + G1Robot + Viewer3D + JointPanel 연결
  */
 
-import './style.css';   // Vite가 번들링 — 경로 문제 없음
-import { CSVPlayer  } from './CSVPlayer.js';
-import { G1Robot    } from './G1Robot.js';
-import { Viewer3D   } from './Viewer3D.js';
-import { JointPanel } from './JointPanel.js';
-import { G1_JOINTS  } from './joints.js';
+import './style.css';
+import { CSVPlayer        } from './CSVPlayer.js';
+import { G1Robot          } from './G1Robot.js';
+import { Viewer3D, VIEW_SOLID, VIEW_SKELETON, VIEW_BOTH } from './Viewer3D.js';
+import { JointPanel       } from './JointPanel.js';
+import { G1_JOINTS        } from './joints.js';
 
 // ── DOM 요소 ─────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -37,7 +37,6 @@ const frameCounter = $('frame-counter');
 const showGrid     = $('show-grid');
 const showAxes     = $('show-axes');
 const showTraj     = $('show-trajectory');
-const showLabels   = $('show-labels');
 const resetCamBtn  = $('reset-camera-btn');
 
 const mappingBtn   = $('mapping-btn');
@@ -163,6 +162,21 @@ showGrid.addEventListener('change', () => viewer.showGrid = showGrid.checked);
 showAxes.addEventListener('change', () => viewer.showAxes = showAxes.checked);
 showTraj.addEventListener('change', () => viewer.showTrajectory = showTraj.checked);
 resetCamBtn.addEventListener('click', () => viewer.resetCamera());
+
+// ── 뷰 모드 버튼 ─────────────────────────────────────────────────
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const mode = parseInt(btn.dataset.mode);
+    viewer.applyViewMode(mode);
+  });
+});
+
+// ── 카메라 프리셋 버튼 ────────────────────────────────────────────
+document.querySelectorAll('.cam-btn').forEach(btn => {
+  btn.addEventListener('click', () => viewer.setCameraPreset(btn.dataset.preset));
+});
 
 // ── 관절 매핑 모달 ────────────────────────────────────────────────
 mappingBtn.addEventListener('click',   () => { buildMappingTable(); mappingModal.classList.remove('hidden'); });
