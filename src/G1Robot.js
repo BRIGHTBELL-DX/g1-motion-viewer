@@ -162,17 +162,20 @@ export class G1Robot {
     forearm.rotation.z = Math.PI / 2;
     elbow.add(forearm);
 
-    // wrist roll → pitch
+    // wrist roll → pitch → yaw (G1 29DOF: 3축 손목)
     const wRoll = pivot([sign * D.forearmL, 0, 0]);
     elbow.add(wRoll); j[`${side}_wrist_roll`] = wRoll;
 
     const wPitch = pivot([0, 0, 0]);
     wRoll.add(wPitch); j[`${side}_wrist_pitch`] = wPitch;
 
+    const wYaw = pivot([0, 0, 0]);
+    wPitch.add(wYaw); j[`${side}_wrist_yaw`] = wYaw;
+
     // hand
     const hand = box(sign * D.handL, D.armR * 1.2, D.armR * 1.5, COL.foot);
     hand.position.set(sign * D.handL / 2, 0, 0);
-    wPitch.add(hand);
+    wYaw.add(hand);
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -255,22 +258,24 @@ export class G1Robot {
     this._applyJoint('right_ankle_pitch',      joints[10], 'x');
     this._applyJoint('right_ankle_roll',       joints[11], 'z');
 
+    // 왼팔 7DOF (URDF 순서: id 15~21)
     this._applyJoint('left_shoulder_pitch',    joints[15], 'x');
     this._applyJoint('left_shoulder_roll',     joints[16], 'z');
     this._applyJoint('left_shoulder_yaw',      joints[17], 'y');
     this._applyJoint('left_elbow',             joints[18], 'x');
     this._applyJoint('left_wrist_roll',        joints[19], 'z');
     this._applyJoint('left_wrist_pitch',       joints[20], 'x');
+    this._applyJoint('left_wrist_yaw',         joints[21], 'y');
 
-    this._applyJoint('right_shoulder_pitch',   joints[21], 'x');
-    this._applyJoint('right_shoulder_roll',    joints[22], 'z');
-    this._applyJoint('right_shoulder_yaw',     joints[23], 'y');
-    this._applyJoint('right_elbow',            joints[24], 'x');
-    this._applyJoint('right_wrist_roll',       joints[25], 'z');
-    this._applyJoint('right_wrist_pitch',      joints[26], 'x');
-
-    this._applyJoint('head_yaw',               joints[27], 'y');
-    this._applyJoint('head_pitch',             joints[28], 'x');
+    // 오른팔 7DOF (URDF 순서: id 22~28)
+    this._applyJoint('right_shoulder_pitch',   joints[22], 'x');
+    this._applyJoint('right_shoulder_roll',    joints[23], 'z');
+    this._applyJoint('right_shoulder_yaw',     joints[24], 'y');
+    this._applyJoint('right_elbow',            joints[25], 'x');
+    this._applyJoint('right_wrist_roll',       joints[26], 'z');
+    this._applyJoint('right_wrist_pitch',      joints[27], 'x');
+    this._applyJoint('right_wrist_yaw',        joints[28], 'y');
+    // ※ G1 29DOF 머리 관절 없음 (fixed joint만 있음)
   }
 
   _applyJoint(name, angle, axis) {

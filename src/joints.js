@@ -32,25 +32,24 @@ export const G1_JOINTS = [
   { id: 13, csvCol: 20, name: 'waist_roll',             group: 'waist',   side: 'center', rotAxis: 'z', limit: [-0.52, 0.52] },
   { id: 14, csvCol: 21, name: 'waist_pitch',            group: 'waist',   side: 'center', rotAxis: 'x', limit: [-0.52, 0.52] },
 
-  // ── 왼쪽 팔 ─────────────────────────────────────────────
+  // ── 왼쪽 팔 (7DOF: shoulder×3 + elbow + wrist×3) ──────────
   { id: 15, csvCol: 22, name: 'left_shoulder_pitch',   group: 'arm',     side: 'left',  rotAxis: 'x', limit: [-3.11, 3.11] },
   { id: 16, csvCol: 23, name: 'left_shoulder_roll',    group: 'arm',     side: 'left',  rotAxis: 'z', limit: [-1.57, 2.96] },
   { id: 17, csvCol: 24, name: 'left_shoulder_yaw',     group: 'arm',     side: 'left',  rotAxis: 'y', limit: [-1.57, 4.45] },
   { id: 18, csvCol: 25, name: 'left_elbow',             group: 'arm',     side: 'left',  rotAxis: 'x', limit: [-1.57, 5.06] },
   { id: 19, csvCol: 26, name: 'left_wrist_roll',       group: 'arm',     side: 'left',  rotAxis: 'z', limit: [-1.57, 1.57] },
   { id: 20, csvCol: 27, name: 'left_wrist_pitch',      group: 'arm',     side: 'left',  rotAxis: 'x', limit: [-1.57, 1.57] },
+  { id: 21, csvCol: 28, name: 'left_wrist_yaw',        group: 'arm',     side: 'left',  rotAxis: 'y', limit: [-1.57, 1.57] },
 
-  // ── 오른쪽 팔 ────────────────────────────────────────────
-  { id: 21, csvCol: 28, name: 'right_shoulder_pitch',  group: 'arm',     side: 'right', rotAxis: 'x', limit: [-3.11, 3.11] },
-  { id: 22, csvCol: 29, name: 'right_shoulder_roll',   group: 'arm',     side: 'right', rotAxis: 'z', limit: [-2.96, 1.57] },
-  { id: 23, csvCol: 30, name: 'right_shoulder_yaw',    group: 'arm',     side: 'right', rotAxis: 'y', limit: [-4.45, 1.57] },
-  { id: 24, csvCol: 31, name: 'right_elbow',            group: 'arm',     side: 'right', rotAxis: 'x', limit: [-5.06, 1.57] },
-  { id: 25, csvCol: 32, name: 'right_wrist_roll',      group: 'arm',     side: 'right', rotAxis: 'z', limit: [-1.57, 1.57] },
-  { id: 26, csvCol: 33, name: 'right_wrist_pitch',     group: 'arm',     side: 'right', rotAxis: 'x', limit: [-1.57, 1.57] },
-
-  // ── 머리 ────────────────────────────────────────────────
-  { id: 27, csvCol: 34, name: 'head_yaw',              group: 'head',    side: 'center', rotAxis: 'y', limit: [-2.62, 2.62] },
-  { id: 28, csvCol: 35, name: 'head_pitch',            group: 'head',    side: 'center', rotAxis: 'x', limit: [-0.87, 0.87] },
+  // ── 오른쪽 팔 (7DOF: shoulder×3 + elbow + wrist×3) ─────
+  { id: 22, csvCol: 29, name: 'right_shoulder_pitch',  group: 'arm',     side: 'right', rotAxis: 'x', limit: [-3.11, 3.11] },
+  { id: 23, csvCol: 30, name: 'right_shoulder_roll',   group: 'arm',     side: 'right', rotAxis: 'z', limit: [-2.96, 1.57] },
+  { id: 24, csvCol: 31, name: 'right_shoulder_yaw',    group: 'arm',     side: 'right', rotAxis: 'y', limit: [-4.45, 1.57] },
+  { id: 25, csvCol: 32, name: 'right_elbow',            group: 'arm',     side: 'right', rotAxis: 'x', limit: [-5.06, 1.57] },
+  { id: 26, csvCol: 33, name: 'right_wrist_roll',      group: 'arm',     side: 'right', rotAxis: 'z', limit: [-1.57, 1.57] },
+  { id: 27, csvCol: 34, name: 'right_wrist_pitch',     group: 'arm',     side: 'right', rotAxis: 'x', limit: [-1.57, 1.57] },
+  { id: 28, csvCol: 35, name: 'right_wrist_yaw',       group: 'arm',     side: 'right', rotAxis: 'y', limit: [-1.57, 1.57] },
+  // ※ G1 29DOF에는 머리 관절(revolute) 없음 — URDF 확인 완료
 ];
 
 /** csvCol → joint 빠른 조회 맵 */
