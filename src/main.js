@@ -3,6 +3,7 @@
  * CSVPlayer + G1Robot + Viewer3D + JointPanel 연결
  */
 
+import './style.css';   // Vite가 번들링 — 경로 문제 없음
 import { CSVPlayer  } from './CSVPlayer.js';
 import { G1Robot    } from './G1Robot.js';
 import { Viewer3D   } from './Viewer3D.js';
