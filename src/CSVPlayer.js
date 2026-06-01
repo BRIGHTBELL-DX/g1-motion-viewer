@@ -40,7 +40,8 @@ export class CSVPlayer {
 
       const parsed = [];
       for (let i = dataStart; i < lines.length; i++) {
-        const row = lines[i].split(',').map(v => parseFloat(v.trim()));
+        // 행 끝 쉼표 제거 후 파싱 (VDRobot Studio 출력이 trailing comma 포함)
+        const row = lines[i].replace(/,\s*$/, '').split(',').map(v => parseFloat(v.trim()));
         if (row.length < 36) continue;                // 컬럼 부족 스킵
         if (row.some(v => isNaN(v))) continue;        // NaN 포함 행 스킵
 
