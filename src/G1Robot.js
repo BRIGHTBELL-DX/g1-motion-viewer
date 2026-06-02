@@ -305,17 +305,17 @@ export class G1Robot {
     this._r('left_shoulder_pitch', a[15], 'x', -1);
     this._r('left_shoulder_roll',  a[16], 'z', -1);
     this._r('left_shoulder_yaw',   a[17], 'y',  1);
-    this._r('left_elbow',          a[18], 'x', -1);
+    this._r('left_elbow',          a[18], 'x', +1);  // 팔꿈치: 양수=굴곡=팔뚝 앞
     this._r('left_wrist_roll',     a[19], 'z', -1);
-    this._r('left_wrist_pitch',    a[20], 'x', -1);
+    this._r('left_wrist_pitch',    a[20], 'x', +1);  // 손목pitch도 같은 방향
     this._r('left_wrist_yaw',      a[21], 'y',  1);
 
     this._r('right_shoulder_pitch',a[22], 'x', -1);
     this._r('right_shoulder_roll', a[23], 'z', -1);
     this._r('right_shoulder_yaw',  a[24], 'y',  1);
-    this._r('right_elbow',         a[25], 'x', -1);
+    this._r('right_elbow',         a[25], 'x', +1);
     this._r('right_wrist_roll',    a[26], 'z', -1);
-    this._r('right_wrist_pitch',   a[27], 'x', -1);
+    this._r('right_wrist_pitch',   a[27], 'x', +1);
     this._r('right_wrist_yaw',     a[28], 'y',  1);
   }
 
