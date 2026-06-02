@@ -110,13 +110,8 @@
         <div class="spinner"></div>
         <p>파일 로딩 중...</p>
       </div>
-      <!-- 빈 상태 힌트 -->
-      <div id="empty-hint">
-        <div class="empty-icon">🤖</div>
-        <h2>G1 Motion Viewer</h2>
-        <p>VDRobot Studio에서 출력된<br/><strong>36컬럼 CSV 파일</strong>을 불러오세요</p>
-        <p class="hint">컬럼 형식: [0-2] root pos · [3-6] quaternion · [7-35] 29 joints</p>
-      </div>
+      <!-- 빈 상태 힌트 (비활성) -->
+      <div id="empty-hint" class="hidden"></div>
     </main>
 
     <!-- 우측 패널: 관절 각도 -->
