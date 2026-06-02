@@ -284,37 +284,39 @@ export class G1Robot {
     // pitch(x) = -angle, roll(z) = -angle, yaw(y) = +angle
     // (ROS Y→Three.js -X, ROS X→Three.js -Z 변환 시 부호 반전 필요)
     const a = frame.joints;
+    // 규칙: pitch(x)=-1 (positive=뒤), roll(z)=+1 (positive=바깥), yaw(y)=+1
+    // 예외: elbow/wrist_pitch = +1 (팔꿈치 굴곡은 앞쪽)
     this._r('waist_yaw',           a[12], 'y',  1);
-    this._r('waist_roll',          a[13], 'z', -1);
+    this._r('waist_roll',          a[13], 'z', +1);
     this._r('waist_pitch',         a[14], 'x', -1);
 
     this._r('left_hip_pitch',      a[0],  'x', -1);
-    this._r('left_hip_roll',       a[1],  'z', -1);
+    this._r('left_hip_roll',       a[1],  'z', +1);
     this._r('left_hip_yaw',        a[2],  'y',  1);
     this._r('left_knee',           a[3],  'x', -1);
     this._r('left_ankle_pitch',    a[4],  'x', -1);
-    this._r('left_ankle_roll',     a[5],  'z', -1);
+    this._r('left_ankle_roll',     a[5],  'z', +1);
 
     this._r('right_hip_pitch',     a[6],  'x', -1);
-    this._r('right_hip_roll',      a[7],  'z', -1);
+    this._r('right_hip_roll',      a[7],  'z', +1);
     this._r('right_hip_yaw',       a[8],  'y',  1);
     this._r('right_knee',          a[9],  'x', -1);
     this._r('right_ankle_pitch',   a[10], 'x', -1);
-    this._r('right_ankle_roll',    a[11], 'z', -1);
+    this._r('right_ankle_roll',    a[11], 'z', +1);
 
     this._r('left_shoulder_pitch', a[15], 'x', -1);
-    this._r('left_shoulder_roll',  a[16], 'z', -1);
+    this._r('left_shoulder_roll',  a[16], 'z', +1);
     this._r('left_shoulder_yaw',   a[17], 'y',  1);
     this._r('left_elbow',          a[18], 'x', +1);  // 팔꿈치: 양수=굴곡=팔뚝 앞
-    this._r('left_wrist_roll',     a[19], 'z', -1);
+    this._r('left_wrist_roll',     a[19], 'z', +1);
     this._r('left_wrist_pitch',    a[20], 'x', +1);  // 손목pitch도 같은 방향
     this._r('left_wrist_yaw',      a[21], 'y',  1);
 
     this._r('right_shoulder_pitch',a[22], 'x', -1);
-    this._r('right_shoulder_roll', a[23], 'z', -1);
+    this._r('right_shoulder_roll', a[23], 'z', +1);
     this._r('right_shoulder_yaw',  a[24], 'y',  1);
     this._r('right_elbow',         a[25], 'x', +1);
-    this._r('right_wrist_roll',    a[26], 'z', -1);
+    this._r('right_wrist_roll',    a[26], 'z', +1);
     this._r('right_wrist_pitch',   a[27], 'x', +1);
     this._r('right_wrist_yaw',     a[28], 'y',  1);
   }
