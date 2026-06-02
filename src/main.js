@@ -38,6 +38,7 @@ const showGrid     = $('show-grid');
 const showAxes     = $('show-axes');
 const showTraj     = $('show-trajectory');
 const resetCamBtn  = $('reset-camera-btn');
+const fpsSelect    = $('fps-select');
 
 const mappingBtn   = $('mapping-btn');
 const mappingModal = $('mapping-modal');
@@ -141,6 +142,14 @@ loopBtn.addEventListener('click', () => {
 speedSlider.addEventListener('input', () => {
   player.speed        = parseFloat(speedSlider.value);
   speedValue.textContent = parseFloat(speedSlider.value).toFixed(1) + '×';
+});
+
+fpsSelect.addEventListener('change', () => {
+  player.fps = parseInt(fpsSelect.value);
+  if (player.totalFrames) {
+    timeTotal.textContent = player.duration.toFixed(2) + 's';
+    fileStatsEl.textContent = `${player.totalFrames}프레임 · ${player.duration.toFixed(1)}초 · ${player.fps}fps`;
+  }
 });
 
 // ── 타임라인 슬라이더 ────────────────────────────────────────────
