@@ -248,12 +248,15 @@ export class G1Robot {
     knee.add(aPitch); j[`${side}_ankle_pitch`] = aPitch;
     const aRoll = pivot(); aPitch.add(aRoll);  j[`${side}_ankle_roll`]  = aRoll;
 
-    const foot = addMesh(box(D.footL, D.footH, D.footW * 0.85, COL.foot));
-    foot.position.set(D.footL * 0.12, -D.footH / 2, 0);
+    // 발: Z축 방향으로 (로봇 전진 방향 = Three.js -Z)
+    // box(너비X, 높이Y, 앞뒤길이Z)
+    const foot = addMesh(box(D.footW * 0.85, D.footH, D.footL, COL.foot));
+    // 발뒤꿈치 ankle 위치, 앞쪽(발끝)은 -Z 방향
+    foot.position.set(0, -D.footH / 2, -D.footL * 0.35);
     aRoll.add(foot);
 
-    // 발끝 가상 노드
-    mk(`n_foot_${side === 'left' ? 'L' : 'R'}`, aRoll, [D.footL * 0.62, -D.footH, 0]);
+    // 발끝 가상 노드 (발 앞쪽)
+    mk(`n_foot_${side === 'left' ? 'L' : 'R'}`, aRoll, [0, -D.footH, -D.footL * 0.65]);
   }
 
   // ── 공개 API ──────────────────────────────────────────────────────
