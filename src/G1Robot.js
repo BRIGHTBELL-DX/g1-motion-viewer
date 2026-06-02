@@ -174,40 +174,45 @@ export class G1Robot {
       return n;
     };
 
+    // ── 어깨 체인 (URDF: 팔이 아래로 내려옴) ─────────────────────────
+    // shoulder_pitch pivot — 어깨 측면에 위치
     const sPitch = pivot([xOff, D.torsoH * 0.88, 0]);
     torso.add(sPitch); j[`${side}_shoulder_pitch`] = sPitch;
 
-    const sRoll = pivot([sign * 0.035, 0, 0]);
+    const sRoll = pivot([0, -0.02, 0]);   // 약간 아래
     sPitch.add(sRoll); j[`${side}_shoulder_roll`] = sRoll;
 
-    const sYaw = pivot();
+    const sYaw = pivot([0, -0.04, 0]);    // 약간 아래
     sRoll.add(sYaw); j[`${side}_shoulder_yaw`] = sYaw;
 
+    // 위팔: 아래로 내려감 (-Y)
     const upperArm = addMesh(capsule(D.armR, D.upperArmL * 0.82, COL.limb));
-    upperArm.position.set(sign * D.upperArmL / 2, 0, 0);
-    upperArm.rotation.z = Math.PI / 2;
+    upperArm.position.set(0, -D.upperArmL / 2, 0);   // 수직 하향
     sYaw.add(upperArm);
 
-    const elbow = pivot([sign * D.upperArmL, 0, 0]);
+    // 팔꿈치: 위팔 아래 끝
+    const elbow = pivot([0, -D.upperArmL, 0]);
     sYaw.add(elbow); j[`${side}_elbow`] = elbow;
     elbow.add(jointDot(0.020));
 
+    // 아래팔: 팔꿈치에서 아래로 (zero angle = 팔 곧게 내림)
     const forearm = addMesh(capsule(D.armR * 0.82, D.forearmL * 0.82, COL.limb));
-    forearm.position.set(sign * D.forearmL / 2, 0, 0);
-    forearm.rotation.z = Math.PI / 2;
+    forearm.position.set(0, -D.forearmL / 2, 0);
     elbow.add(forearm);
 
-    const wRoll  = pivot([sign * D.forearmL, 0, 0]);
+    // 손목: 아래팔 끝
+    const wRoll  = pivot([0, -D.forearmL, 0]);
     elbow.add(wRoll);  j[`${side}_wrist_roll`]  = wRoll;
     const wPitch = pivot(); wRoll.add(wPitch);   j[`${side}_wrist_pitch`] = wPitch;
     const wYaw   = pivot(); wPitch.add(wYaw);    j[`${side}_wrist_yaw`]   = wYaw;
 
-    const hand = addMesh(box(sign * D.handL * 1.1, D.armR * 1.1, D.armR * 1.4, COL.foot));
-    hand.position.set(sign * D.handL * 0.55, 0, 0);
+    // 손: 손목에서 아래/앞
+    const hand = addMesh(box(D.armR * 1.0, D.handL * 1.1, D.armR * 1.3, COL.foot));
+    hand.position.set(0, -D.handL * 0.55, 0);
     wYaw.add(hand);
 
     // 손끝 가상 노드
-    mk(`n_hand_${side === 'left' ? 'L' : 'R'}`, wYaw, [sign * D.handL * 1.1, 0, 0]);
+    mk(`n_hand_${side === 'left' ? 'L' : 'R'}`, wYaw, [0, -D.handL * 1.1, 0]);
   }
 
   _buildLeg(pelvis, side, xOff) {
@@ -273,47 +278,49 @@ export class G1Robot {
     const [qx, qy, qz, qw] = frame.rootQuat;
     this.root.quaternion.set(-qy, qz, -qx, qw);
 
+    // pitch(x) = -angle, roll(z) = -angle, yaw(y) = +angle
+    // (ROS Y→Three.js -X, ROS X→Three.js -Z 변환 시 부호 반전 필요)
     const a = frame.joints;
-    this._r('waist_yaw',           a[12], 'y');
-    this._r('waist_roll',          a[13], 'z');
-    this._r('waist_pitch',         a[14], 'x');
+    this._r('waist_yaw',           a[12], 'y',  1);
+    this._r('waist_roll',          a[13], 'z', -1);
+    this._r('waist_pitch',         a[14], 'x', -1);
 
-    this._r('left_hip_pitch',      a[0],  'x');
-    this._r('left_hip_roll',       a[1],  'z');
-    this._r('left_hip_yaw',        a[2],  'y');
-    this._r('left_knee',           a[3],  'x');
-    this._r('left_ankle_pitch',    a[4],  'x');
-    this._r('left_ankle_roll',     a[5],  'z');
+    this._r('left_hip_pitch',      a[0],  'x', -1);
+    this._r('left_hip_roll',       a[1],  'z', -1);
+    this._r('left_hip_yaw',        a[2],  'y',  1);
+    this._r('left_knee',           a[3],  'x', -1);
+    this._r('left_ankle_pitch',    a[4],  'x', -1);
+    this._r('left_ankle_roll',     a[5],  'z', -1);
 
-    this._r('right_hip_pitch',     a[6],  'x');
-    this._r('right_hip_roll',      a[7],  'z');
-    this._r('right_hip_yaw',       a[8],  'y');
-    this._r('right_knee',          a[9],  'x');
-    this._r('right_ankle_pitch',   a[10], 'x');
-    this._r('right_ankle_roll',    a[11], 'z');
+    this._r('right_hip_pitch',     a[6],  'x', -1);
+    this._r('right_hip_roll',      a[7],  'z', -1);
+    this._r('right_hip_yaw',       a[8],  'y',  1);
+    this._r('right_knee',          a[9],  'x', -1);
+    this._r('right_ankle_pitch',   a[10], 'x', -1);
+    this._r('right_ankle_roll',    a[11], 'z', -1);
 
-    this._r('left_shoulder_pitch', a[15], 'x');
-    this._r('left_shoulder_roll',  a[16], 'z');
-    this._r('left_shoulder_yaw',   a[17], 'y');
-    this._r('left_elbow',          a[18], 'x');
-    this._r('left_wrist_roll',     a[19], 'z');
-    this._r('left_wrist_pitch',    a[20], 'x');
-    this._r('left_wrist_yaw',      a[21], 'y');
+    this._r('left_shoulder_pitch', a[15], 'x', -1);
+    this._r('left_shoulder_roll',  a[16], 'z', -1);
+    this._r('left_shoulder_yaw',   a[17], 'y',  1);
+    this._r('left_elbow',          a[18], 'x', -1);
+    this._r('left_wrist_roll',     a[19], 'z', -1);
+    this._r('left_wrist_pitch',    a[20], 'x', -1);
+    this._r('left_wrist_yaw',      a[21], 'y',  1);
 
-    this._r('right_shoulder_pitch',a[22], 'x');
-    this._r('right_shoulder_roll', a[23], 'z');
-    this._r('right_shoulder_yaw',  a[24], 'y');
-    this._r('right_elbow',         a[25], 'x');
-    this._r('right_wrist_roll',    a[26], 'z');
-    this._r('right_wrist_pitch',   a[27], 'x');
-    this._r('right_wrist_yaw',     a[28], 'y');
+    this._r('right_shoulder_pitch',a[22], 'x', -1);
+    this._r('right_shoulder_roll', a[23], 'z', -1);
+    this._r('right_shoulder_yaw',  a[24], 'y',  1);
+    this._r('right_elbow',         a[25], 'x', -1);
+    this._r('right_wrist_roll',    a[26], 'z', -1);
+    this._r('right_wrist_pitch',   a[27], 'x', -1);
+    this._r('right_wrist_yaw',     a[28], 'y',  1);
   }
 
-  _r(name, angle, axis) {
+  _r(name, angle, axis, sign = 1) {
     const n = this._joints[name];
     if (!n || angle === undefined || isNaN(angle)) return;
     n.rotation.set(0, 0, 0);
-    n.rotation[axis] = angle;
+    n.rotation[axis] = sign * angle;
   }
 
   resetPose() {
