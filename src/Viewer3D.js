@@ -222,6 +222,21 @@ export class Viewer3D {
     pa.needsUpdate = true;
     this._trajLine.geometry.setDrawRange(0, n);
   }
+
+  /** VirDyn Body 모드용 궤적 업데이트 (THREE.js 좌표 직접 입력) */
+  updateBodyTrajectory(x, y, z) {
+    if (!this._trajLine.visible) return;
+    this._trajectoryPoints.push(x, y * 0.02, z);  // y는 살짝만 (높이 변화 강조 감소)
+    if (this._trajectoryPoints.length > this._maxTrajPoints * 3)
+      this._trajectoryPoints.splice(0, 3);
+    const pa = this._trajLine.geometry.attributes.position;
+    const n  = this._trajectoryPoints.length / 3;
+    for (let i = 0; i < n; i++)
+      pa.setXYZ(i, this._trajectoryPoints[i*3], this._trajectoryPoints[i*3+1], this._trajectoryPoints[i*3+2]);
+    pa.needsUpdate = true;
+    this._trajLine.geometry.setDrawRange(0, n);
+  }
+
   clearTrajectory() {
     this._trajectoryPoints = [];
     this._trajLine.geometry.setDrawRange(0, 0);

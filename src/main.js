@@ -1,6 +1,7 @@
 /**
  * main.js — G1 Motion Viewer 진입점
  * CSVPlayer + G1Robot + Viewer3D + JointPanel 연결
+ * VirDyn Body CSV (163컬럼) 자동 감지 및 인체 스켈레톤 모드 지원
  */
 
 import './style.css';
@@ -9,6 +10,9 @@ import { G1Robot          } from './G1Robot.js';
 import { Viewer3D, VIEW_SOLID, VIEW_SKELETON, VIEW_BOTH } from './Viewer3D.js';
 import { JointPanel       } from './JointPanel.js';
 import { G1_JOINTS        } from './joints.js';
+import { BodyPlayer       } from './BodyPlayer.js';
+import { BodySkeleton     } from './BodySkeleton.js';
+import { isVirDynBodyCSV  } from './VirDynBodyParser.js';
 
 // ── DOM 요소 ─────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -39,6 +43,7 @@ const showAxes     = $('show-axes');
 const showTraj     = $('show-trajectory');
 const resetCamBtn  = $('reset-camera-btn');
 const fpsSelect    = $('fps-select');
+const modeBadge    = $('mode-badge');
 
 const mappingBtn   = $('mapping-btn');
 const mappingModal = $('mapping-modal');
@@ -50,71 +55,147 @@ const mappingTableContainer = $('mapping-table-container');
 const jointPanelEl = $('joint-panel');
 
 // ── 인스턴스 생성 ────────────────────────────────────────────────
-const player = new CSVPlayer();
-const robot  = new G1Robot();
-const viewer = new Viewer3D(canvas);
-const jPanel = new JointPanel(jointPanelEl);
+const player     = new CSVPlayer();     // G1 lafan 36-col 모드
+const bodyPlayer = new BodyPlayer();    // VirDyn body 163-col 모드
+const robot      = new G1Robot();
+const bodySkel   = new BodySkeleton();
+const viewer     = new Viewer3D(canvas);
+const jPanel     = new JointPanel(jointPanelEl);
 
 viewer.addRobot(robot);
+bodySkel.addTo(viewer._scene);
+bodySkel.setVisible(false);
 
-// ── 타임라인 업데이트 콜백 ───────────────────────────────────────
+// ── 현재 모드 ────────────────────────────────────────────────────
+// 'lafan'  : G1 29DOF CSV (기존)
+// 'body'   : VirDyn Body 163-col CSV
+let _mode         = 'lafan';
+let _activePlayer = player;
+
+function setMode(mode) {
+  _mode = mode;
+  if (mode === 'body') {
+    _activePlayer = bodyPlayer;
+    robot.root.visible  = false;
+    viewer._skelLines.visible = false;
+    viewer._jointDots.forEach(d => { d.visible = false; });
+    bodySkel.setVisible(true);
+    if (modeBadge) { modeBadge.textContent = '🧍 인체 모션'; modeBadge.className = 'mode-badge body'; }
+  } else {
+    _activePlayer = player;
+    robot.root.visible = true;
+    bodySkel.setVisible(false);
+    viewer.applyViewMode(viewer._viewMode);  // 기존 뷰 모드 복원
+    if (modeBadge) { modeBadge.textContent = '🤖 G1 로봇'; modeBadge.className = 'mode-badge lafan'; }
+  }
+}
+
+// ── G1 모드 onFrame 콜백 ─────────────────────────────────────────
 player.onFrame((frame, idx, total) => {
   robot.applyFrame(frame);
   viewer.updateTrajectory(frame);
   jPanel.update(frame.joints);
+  _syncTimeline(idx, total, player.fps);
+});
 
-  const t = idx / player.fps;
+// ── Body 모드 onFrame 콜백 ───────────────────────────────────────
+bodyPlayer.onFrame((frame, idx, total) => {
+  bodySkel.applyFrame(frame);
+  // 궤적: Hips 위치 활용
+  const hp = bodySkel.getRootPos();
+  viewer.updateBodyTrajectory(hp.x, hp.y, hp.z);
+  jPanel.updateBody(frame);
+  _syncTimeline(idx, total, bodyPlayer.fps);
+});
+
+// ── 타임라인 동기화 헬퍼 ─────────────────────────────────────────
+function _syncTimeline(idx, total, fps) {
+  const t = idx / fps;
   timeCurrent.textContent  = t.toFixed(2) + 's';
   frameCounter.textContent = `Frame: ${idx} / ${total - 1}`;
-
-  // 슬라이더 드래그 중엔 업데이트 안 함
-  if (!_seeking) {
-    timelineSlider.value = idx;
-  }
-});
+  if (!_seeking) timelineSlider.value = idx;
+}
 
 // ── 파일 로드 ────────────────────────────────────────────────────
 function loadFile(file) {
-  if (!file || !file.name.endsWith('.csv')) {
-    alert('CSV 파일만 지원합니다.');
-    return;
-  }
+  if (!file) return;
+  if (!file.name.endsWith('.csv')) { alert('CSV 파일만 지원합니다.'); return; }
 
   loadingOverlay.classList.add('show');
 
   const reader = new FileReader();
   reader.onload = e => {
-    const result = player.load(e.target.result);
+    const text = e.target.result;
     loadingOverlay.classList.remove('show');
 
-    if (!result.ok) {
-      alert(`로드 실패: ${result.error}`);
-      return;
+    // ── 포맷 자동 감지 ──────────────────────────────────────────
+    const firstLine = text.split('\n')[0];
+    if (isVirDynBodyCSV(firstLine)) {
+      _loadBodyCSV(text, file);
+    } else {
+      _loadLafanCSV(text, file);
     }
-
-    // UI 업데이트
-    emptyHint.classList.add('hidden');
-    fileInfo.classList.remove('hidden');
-    fileNameEl.textContent  = file.name;
-    fileStatsEl.textContent = `${result.frames}프레임 · ${(result.frames / result.fps).toFixed(1)}초 · ${result.fps}fps`;
-
-    timelineSlider.max   = result.frames - 1;
-    timelineSlider.value = 0;
-    timeTotal.textContent = (result.frames / result.fps).toFixed(2) + 's';
-
-    viewer.clearTrajectory();
-    jPanel.reset();
-    player.rewind();
-    playBtn.textContent = '▶';
   };
   reader.readAsText(file);
+}
+
+// G1 lafan 36-col CSV 로드
+function _loadLafanCSV(text, file) {
+  const result = player.load(text);
+  if (!result.ok) { alert(`로드 실패: ${result.error}`); return; }
+
+  setMode('lafan');
+  _afterLoad(file.name, result.frames, result.fps);
+}
+
+// VirDyn Body 163-col CSV 로드
+function _loadBodyCSV(text, file) {
+  const result = bodyPlayer.load(text);
+  if (!result.ok) { alert(`로드 실패: ${result.error}`); return; }
+
+  setMode('body');
+  // FPS 셀렉트에 동적으로 추가
+  _ensureFpsOption(result.fps);
+  fpsSelect.value = String(result.fps);
+
+  _afterLoad(file.name, result.frames, result.fps, true);
+}
+
+// 로드 후 공통 UI 업데이트
+function _afterLoad(name, frameCount, fps, isBody = false) {
+  emptyHint.classList.add('hidden');
+  fileInfo.classList.remove('hidden');
+  fileNameEl.textContent  = name;
+  fileStatsEl.textContent = `${frameCount}프레임 · ${(frameCount / fps).toFixed(1)}초 · ${fps}fps` +
+    (isBody ? ' (VirDyn Body)' : '');
+
+  timelineSlider.max   = frameCount - 1;
+  timelineSlider.value = 0;
+  timeTotal.textContent = (frameCount / fps).toFixed(2) + 's';
+
+  viewer.clearTrajectory();
+  bodySkel.resetPose();
+  jPanel.reset();
+  _activePlayer.rewind();
+  playBtn.textContent = '▶';
+}
+
+// FPS 셀렉트에 없는 값이면 옵션 추가
+function _ensureFpsOption(fps) {
+  const existing = Array.from(fpsSelect.options).map(o => parseInt(o.value));
+  if (!existing.includes(fps)) {
+    const opt = document.createElement('option');
+    opt.value = String(fps);
+    opt.text  = `${fps} fps (VirDyn)`;
+    fpsSelect.appendChild(opt);
+  }
 }
 
 loadBtn.addEventListener('click', () => csvInput.click());
 csvInput.addEventListener('change', e => loadFile(e.target.files[0]));
 
 // 드래그 앤 드롭
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
   e.preventDefault();
@@ -124,46 +205,46 @@ dropZone.addEventListener('drop', e => {
 
 // ── 재생 컨트롤 ──────────────────────────────────────────────────
 playBtn.addEventListener('click', () => {
-  player.toggle();
-  playBtn.textContent = player.playing ? '⏸' : '▶';
+  _activePlayer.toggle();
+  playBtn.textContent = _activePlayer.playing ? '⏸' : '▶';
 });
 
 rewindBtn.addEventListener('click', () => {
-  player.rewind();
+  _activePlayer.rewind();
   playBtn.textContent = '▶';
   viewer.clearTrajectory();
 });
 
 loopBtn.addEventListener('click', () => {
-  player.loop = !player.loop;
-  loopBtn.classList.toggle('active', player.loop);
+  _activePlayer.loop = !_activePlayer.loop;
+  loopBtn.classList.toggle('active', _activePlayer.loop);
 });
 
 speedSlider.addEventListener('input', () => {
-  player.speed        = parseFloat(speedSlider.value);
-  speedValue.textContent = parseFloat(speedSlider.value).toFixed(1) + '×';
+  const v = parseFloat(speedSlider.value);
+  player.speed     = v;
+  bodyPlayer.speed = v;
+  speedValue.textContent = v.toFixed(1) + '×';
 });
 
 fpsSelect.addEventListener('change', () => {
-  player.fps = parseInt(fpsSelect.value);
-  if (player.totalFrames) {
-    timeTotal.textContent = player.duration.toFixed(2) + 's';
-    fileStatsEl.textContent = `${player.totalFrames}프레임 · ${player.duration.toFixed(1)}초 · ${player.fps}fps`;
+  const v = parseInt(fpsSelect.value);
+  _activePlayer.fps = v;
+  if (_activePlayer.totalFrames) {
+    timeTotal.textContent = _activePlayer.duration.toFixed(2) + 's';
   }
 });
 
 // ── 타임라인 슬라이더 ────────────────────────────────────────────
 let _seeking = false;
 
-timelineSlider.addEventListener('mousedown', () => { _seeking = true; player.pause(); });
-timelineSlider.addEventListener('touchstart', () => { _seeking = true; player.pause(); });
-
+timelineSlider.addEventListener('mousedown', () => { _seeking = true; _activePlayer.pause(); });
+timelineSlider.addEventListener('touchstart', () => { _seeking = true; _activePlayer.pause(); });
 timelineSlider.addEventListener('input', () => {
-  player.seekToFrame(parseInt(timelineSlider.value));
+  _activePlayer.seekToFrame(parseInt(timelineSlider.value));
   playBtn.textContent = '▶';
 });
-
-timelineSlider.addEventListener('mouseup', () => { _seeking = false; });
+timelineSlider.addEventListener('mouseup',  () => { _seeking = false; });
 timelineSlider.addEventListener('touchend', () => { _seeking = false; });
 
 // ── 뷰 설정 ──────────────────────────────────────────────────────
@@ -172,17 +253,18 @@ showAxes.addEventListener('change', () => viewer.showAxes = showAxes.checked);
 showTraj.addEventListener('change', () => viewer.showTrajectory = showTraj.checked);
 resetCamBtn.addEventListener('click', () => viewer.resetCamera());
 
-// ── 뷰 모드 버튼 ─────────────────────────────────────────────────
+// ── 뷰 모드 버튼 (G1 모드에서만 유효) ──────────────────────────
 document.querySelectorAll('.view-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const mode = parseInt(btn.dataset.mode);
-    viewer.applyViewMode(mode);
+    if (_mode === 'lafan') {
+      viewer.applyViewMode(parseInt(btn.dataset.mode));
+    }
   });
 });
 
-// ── 카메라 프리셋 버튼 ────────────────────────────────────────────
+// ── 카메라 프리셋 ─────────────────────────────────────────────────
 document.querySelectorAll('.cam-btn').forEach(btn => {
   btn.addEventListener('click', () => viewer.setCameraPreset(btn.dataset.preset));
 });
@@ -198,7 +280,6 @@ function buildMappingTable() {
   const table = document.createElement('table');
   table.className = 'mapping-table';
   table.innerHTML = `<tr><th>관절 ID</th><th>관절명</th><th>CSV 컬럼</th><th>그룹</th></tr>`;
-
   for (const j of G1_JOINTS) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -223,7 +304,6 @@ function applyMapping() {
 }
 
 function restoreDefaultMapping() {
-  // 기본값: csvCol = id + 7
   G1_JOINTS.forEach(j => { j.csvCol = j.id + 7; });
   buildMappingTable();
 }
@@ -233,40 +313,30 @@ document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
   if (e.code === 'Space') {
     e.preventDefault();
-    player.toggle();
-    playBtn.textContent = player.playing ? '⏸' : '▶';
+    _activePlayer.toggle();
+    playBtn.textContent = _activePlayer.playing ? '⏸' : '▶';
   }
-  if (e.code === 'ArrowLeft') {
-    player.pause(); player.seekToFrame(player.frameIdx - 1); playBtn.textContent = '▶';
-  }
-  if (e.code === 'ArrowRight') {
-    player.pause(); player.seekToFrame(player.frameIdx + 1); playBtn.textContent = '▶';
-  }
-  if (e.code === 'Home') {
-    player.rewind(); viewer.clearTrajectory(); playBtn.textContent = '▶';
-  }
-  if (e.code === 'KeyR') {
-    viewer.resetCamera();
-  }
+  if (e.code === 'ArrowLeft')  { _activePlayer.pause(); _activePlayer.seekToFrame(_activePlayer.frameIdx - 1); playBtn.textContent = '▶'; }
+  if (e.code === 'ArrowRight') { _activePlayer.pause(); _activePlayer.seekToFrame(_activePlayer.frameIdx + 1); playBtn.textContent = '▶'; }
+  if (e.code === 'Home')       { _activePlayer.rewind(); viewer.clearTrajectory(); playBtn.textContent = '▶'; }
+  if (e.code === 'KeyR')       { viewer.resetCamera(); }
 });
 
 // ── rAF 렌더 루프 ────────────────────────────────────────────────
 let _frameCount = 0;
 function animate(now) {
   requestAnimationFrame(animate);
-
-  player.tick(now);
+  _activePlayer.tick(now);
   viewer.render(now);
-
-  // FPS 표시 (매 30프레임)
   if (++_frameCount % 30 === 0) {
     fpsCounter.textContent = viewer.fps + ' FPS';
   }
 }
 
 // ── 초기화 ───────────────────────────────────────────────────────
-viewer._onResize();        // 초기 사이즈 맞춤
+setMode('lafan');
+viewer._onResize();
 requestAnimationFrame(animate);
 
-console.log('[G1 Motion Viewer] 초기화 완료');
+console.log('[G1 Motion Viewer] 초기화 완료 (G1 lafan + VirDyn Body 양방향 지원)');
 console.log('단축키: Space=재생/정지, ←→=프레임 이동, Home=처음, R=카메라 초기화');

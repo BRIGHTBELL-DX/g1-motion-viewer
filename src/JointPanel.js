@@ -86,12 +86,81 @@ export class JointPanel {
     }
   }
 
-  reset() {
-    for (const { bar, valEl, row } of this._rows) {
-      bar.style.width     = '0%';
-      bar.className       = 'joint-bar';
-      valEl.textContent   = '0.000';
-      row.style.background = '';
+  /**
+   * VirDyn Body 모드: 주요 뼈 높이 표시
+   * @param {object} frame - {bones: {BoneName: [x,y,z]}, time}
+   */
+  updateBody(frame) {
+    if (!frame?.bones) return;
+    const b = frame.bones;
+    const SHOW = [
+      ['Head',         'Head'],
+      ['Hips',         'Hips'],
+      ['RightHand',    'R.Hand'],
+      ['LeftHand',     'L.Hand'],
+      ['RightFoot',    'R.Foot'],
+      ['LeftFoot',     'L.Foot'],
+      ['RightUpperArm','R.UpperArm'],
+      ['LeftUpperArm', 'L.UpperArm'],
+      ['Spine3',       'Spine3'],
+    ];
+
+    if (!this._bodyMode) {
+      this._buildBodyPanel(SHOW);
     }
+
+    for (const [bone, label] of SHOW) {
+      const pos  = b[bone];
+      const rowEl = this._bodyRows?.[bone];
+      if (!rowEl || !pos) continue;
+      const h = pos[1];  // THREE.js Y = height
+      rowEl.valEl.textContent = h.toFixed(3) + 'm';
+      const pct = Math.max(0, Math.min(100, (h / 2.0) * 100));
+      rowEl.bar.style.width = `${pct}%`;
+    }
+  }
+
+  _buildBodyPanel(show) {
+    this._bodyMode = true;
+    this._bodyRows = {};
+    this._container.innerHTML = '';
+
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:10px;color:#4caf7d;font-weight:600;padding:4px 4px 6px;text-transform:uppercase;letter-spacing:0.06em;';
+    hdr.textContent = '🧍 인체 뼈 높이 (m)';
+    this._container.appendChild(hdr);
+
+    for (const [bone, label] of show) {
+      const row = document.createElement('div');
+      row.className = 'joint-row';
+
+      const nameEl = document.createElement('span');
+      nameEl.className   = 'joint-name';
+      nameEl.textContent = label;
+
+      const barWrap = document.createElement('div');
+      barWrap.className = 'joint-bar-wrap';
+      const bar = document.createElement('div');
+      bar.className = 'joint-bar';
+      bar.style.cssText = 'width:0%;background:#4caf7d';
+      barWrap.appendChild(bar);
+
+      const valEl = document.createElement('span');
+      valEl.className   = 'joint-val';
+      valEl.textContent = '0.000m';
+
+      row.appendChild(nameEl);
+      row.appendChild(barWrap);
+      row.appendChild(valEl);
+      this._container.appendChild(row);
+
+      this._bodyRows[bone] = { bar, valEl };
+    }
+  }
+
+  reset() {
+    this._bodyMode = false;
+    this._bodyRows = null;
+    this._build();  // G1 패널로 복원
   }
 }
