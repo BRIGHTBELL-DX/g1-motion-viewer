@@ -253,13 +253,16 @@ showAxes.addEventListener('change', () => viewer.showAxes = showAxes.checked);
 showTraj.addEventListener('change', () => viewer.showTrajectory = showTraj.checked);
 resetCamBtn.addEventListener('click', () => viewer.resetCamera());
 
-// ── 뷰 모드 버튼 (G1 모드에서만 유효) ──────────────────────────
+// ── 뷰 모드 버튼 (G1 / Body 양쪽 지원) ──────────────────────────
 document.querySelectorAll('.view-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    const mode = parseInt(btn.dataset.mode);
     if (_mode === 'lafan') {
-      viewer.applyViewMode(parseInt(btn.dataset.mode));
+      viewer.applyViewMode(mode);
+    } else {
+      bodySkel.setViewMode(mode);
     }
   });
 });
